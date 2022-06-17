@@ -2,6 +2,9 @@
 #include "Components/ActorComponent.h"
 #include "T7LevitateResponse.generated.h"
 
+class UT7AmmoComponent;
+class AGP3Character;
+
 UCLASS(ClassGroup = ProjectileResponse, Meta = (BlueprintSpawnableComponent))
 class UT7LevitateResponse : public UActorComponent
 {
@@ -17,12 +20,13 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnStopLevitate OnStopLevitate;
 	
+	// Triggers
 	UFUNCTION(BlueprintCallable)
 	void StartLevitate();
 	
 	UFUNCTION(BlueprintCallable)
 	void StopLevitate();
-
-	UPROPERTY(BlueprintReadOnly)
+	
+	UPROPERTY(BlueprintReadWrite)
 	bool bIsLevitating;
 };

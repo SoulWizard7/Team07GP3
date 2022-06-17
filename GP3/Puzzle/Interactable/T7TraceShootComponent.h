@@ -12,16 +12,22 @@ class GP3_API UT7TraceShootComponent : public UActorComponent
 public:
 	UT7TraceShootComponent();
 
-protected:
-	virtual void BeginPlay() override;
-
 public:
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	UFUNCTION()
+	void LineTraceShoot(FVector CameraLocation, FVector Direction, float LineRange, ECollisionChannel TraceChannel);
 
 	UFUNCTION(BlueprintCallable)
-	void LineTraceShoot(FVector Location, FVector Direction, ECollisionChannel TraceChannel = ECC_WorldStatic);
+	void LineTraceShootComponent(USceneComponent* SceneComponent, ECollisionChannel TraceChannel = ECC_WorldStatic);
 
+	UFUNCTION(BlueprintCallable)
+	UT7TraceHitResponse* Interact();
 public:
 	UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly)
 	UT7TraceHitResponse* HoveredHitResponse;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float Range;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool bIsHitting;
 };

@@ -1,124 +1,121 @@
 #include "T7ShootProjectile.h"
-
 #include "T7FreezeProjectile.h"
 #include "T7LevitateProjectile.h"
 #include "T7ProjectileMovementComponent.h"
 #include "T7StickyProjectile.h"
+#include "T7AmmoComponent.h"
+#include "GP3/Library/T7Debug.h"
 
-UT7ShootProjectile::UT7ShootProjectile()
-{
-	
-}
+UT7ShootProjectile::UT7ShootProjectile(){}
 
 void UT7ShootProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Yellow, TEXT("Sticky Selected"), true, FVector2D(1.f));
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 }
 
-void UT7ShootProjectile::FireProjectile(FTransform SpawnTransform, FVector ForwardVector)
+void UT7ShootProjectile::FireProjectile(FTransform SpawnTransform, FVector ForwardVector, float ImpulseFromDegrees, FVector AdjustedGravity)
 {		
 	switch (ProjectileType)
 	{
 	case EProjectileTypes::Frozen:
-		
-		ShootFreezeProjectile(SpawnTransform, ForwardVector);
-		
+		ShootFreezeProjectile(SpawnTransform, ForwardVector, ImpulseFromDegrees, AdjustedGravity);
 		break;
+		
 	case EProjectileTypes::Levitate:
-		
-		ShootLevitateProjectile(SpawnTransform, ForwardVector);
-		
+		ShootLevitateProjectile(SpawnTransform, ForwardVector, ImpulseFromDegrees, AdjustedGravity);
 		break;
-	case EProjectileTypes::Sticky:
-
-		ShootStickyProjectile(SpawnTransform, ForwardVector);		
 		
+	case EProjectileTypes::Sticky:
+		ShootStickyProjectile(SpawnTransform, ForwardVector, ImpulseFromDegrees, AdjustedGravity);		
 		break;
 	}
 }
 
 void UT7ShootProjectile::SetGunToSticky()
 {
-	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Yellow, TEXT("Sticky Selected"), true, FVector2D(1.f));
 	ProjectileType = EProjectileTypes::Sticky;
 }
 
 void UT7ShootProjectile::SetGunToUseFreeze()
 {
-	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Yellow, TEXT("Freeze Selected"), true, FVector2D(1.f));
 	ProjectileType = EProjectileTypes::Frozen;
 }
 
 void UT7ShootProjectile::SetGunToUseLevitate()
 {
-	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Yellow, TEXT("Levitate Selected"), true, FVector2D(1.f));
 	ProjectileType = EProjectileTypes::Levitate;
 }
 
-void UT7ShootProjectile::ShootLevitateProjectile(FTransform SpawnTransform, FVector ForwardVector)
+void UT7ShootProjectile::ShootLevitateProjectile(FTransform SpawnTransform, FVector ForwardVector, float ImpulseFromDegrees, FVector AdjustedGravity) const
 {
-	AT7LevitateProjectile* LevitateProj;
-	UT7ProjectileMovementComponent* ProjectileMovementComponent;
-
-	LevitateProj = GetWorld()->SpawnActor<AT7LevitateProjectile>(LevitateProjectile, SpawnTransform);
-	ProjectileMovementComponent = LevitateProj->FindComponentByClass<UT7ProjectileMovementComponent>();
-	ProjectileMovementComponent->ForwardVector = ForwardVector;
-
-	if(ProjectileMovementComponent == nullptr)
+	if(AmmoComponent->LevitateAmmo <= 0)
 	{
-		FString msg1 = FString::Printf(TEXT ("ProjectileMovementComponent == nullptr"));
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, msg1, true, FVector2D(1.f));
+		OnShootNoAmmo.Broadcast();
+		return;
 	}
-	else
+
+	AT7LevitateProjectile* LevitateProj = GetWorld()->SpawnActor<AT7LevitateProjectile>(LevitateProjectile, SpawnTransform, SpawnParameters);
+	if (LevitateProj == nullptr)
 	{
-		FString msg2 = ProjectileMovementComponent->ForwardVector.ToString();
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, msg2, true, FVector2D(1.f));			
-		ProjectileMovementComponent->TriggerImpulse();
+		return;
 	}
+	UT7ProjectileMovementComponent* ProjectileMovementComponent = LevitateProj->FindComponentByClass<UT7ProjectileMovementComponent>();
+	if (ProjectileMovementComponent == nullptr)
+	{
+		return;
+	}
+	ProjectileMovementComponent->PC->AddImpulse(ImpulseFromDegrees * ForwardVector);
+	ProjectileMovementComponent->AdjustedGravity = AdjustedGravity;
+	OnShootLevitate.Broadcast();
 }
 
-void UT7ShootProjectile::ShootFreezeProjectile(FTransform SpawnTransform, FVector ForwardVector)
+void UT7ShootProjectile::ShootFreezeProjectile(FTransform SpawnTransform, FVector ForwardVector, float ImpulseFromDegrees, FVector AdjustedGravity) const
 {
-	AT7FreezeProjectile* FreezeProj;
-	UT7ProjectileMovementComponent* ProjectileMovementComponent;
+	if(AmmoComponent->FreezeAmmo <= 0)
+	{
+		OnShootNoAmmo.Broadcast();
+		return;
+	}
 	
-	FreezeProj = GetWorld()->SpawnActor<AT7FreezeProjectile>(FreezeProjectile, SpawnTransform);
-	ProjectileMovementComponent = FreezeProj->FindComponentByClass<UT7ProjectileMovementComponent>();
-	ProjectileMovementComponent->ForwardVector = ForwardVector;
-
-	if(ProjectileMovementComponent == nullptr)
+	AT7FreezeProjectile* FreezeProj = GetWorld()->SpawnActor<AT7FreezeProjectile>(FreezeProjectile, SpawnTransform, SpawnParameters);
+	if (FreezeProj == nullptr)
 	{
-		FString msg1 = FString::Printf(TEXT ("ProjectileMovementComponent == nullptr"));
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, msg1, true, FVector2D(1.f));
+		return;
 	}
-	else
+	UT7ProjectileMovementComponent* ProjectileMovementComponent = FreezeProj->FindComponentByClass<UT7ProjectileMovementComponent>();
+	if (ProjectileMovementComponent == nullptr)
 	{
-		FString msg2 = ProjectileMovementComponent->ForwardVector.ToString();
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, msg2, true, FVector2D(1.f));			
-		ProjectileMovementComponent->TriggerImpulse();
+		return;
 	}
+	ProjectileMovementComponent->PC->AddImpulse(ImpulseFromDegrees * ForwardVector);
+	ProjectileMovementComponent->AdjustedGravity = AdjustedGravity;
+	OnShootFreeze.Broadcast();
 }
 
-void UT7ShootProjectile::ShootStickyProjectile(FTransform SpawnTransform, FVector ForwardVector)
+void UT7ShootProjectile::ShootStickyProjectile(FTransform SpawnTransform, FVector ForwardVector, float ImpulseFromDegrees, FVector AdjustedGravity) const
 {
-	AT7StickyProjectile* StickyProj;
-	UT7ProjectileMovementComponent* ProjectileMovementComponent;
-	
-	StickyProj = GetWorld()->SpawnActor<AT7StickyProjectile>(StickyProjectile, SpawnTransform);
-	ProjectileMovementComponent = StickyProj->FindComponentByClass<UT7ProjectileMovementComponent>();
-	ProjectileMovementComponent->ForwardVector = ForwardVector;
+	if(AmmoComponent->StickyAmmo <= 0)
+	{
+		OnShootNoAmmo.Broadcast();
+		return;
+	}
+	const AT7StickyProjectile* StickyProj = GetWorld()->SpawnActor<AT7StickyProjectile>(StickyProjectile, SpawnTransform, SpawnParameters);
+	if (StickyProj == nullptr)
+	{
+		return;
+	}
+	UT7ProjectileMovementComponent* ProjectileMovementComponent = StickyProj->FindComponentByClass<UT7ProjectileMovementComponent>();
+	if (ProjectileMovementComponent == nullptr)
+	{
+		return;
+	}
+	ProjectileMovementComponent->PC->AddImpulse(ImpulseFromDegrees * ForwardVector);
+	ProjectileMovementComponent->AdjustedGravity = AdjustedGravity;
+	OnShootSticky.Broadcast();
+}
 
-	if(ProjectileMovementComponent == nullptr)
-	{
-		FString msg1 = FString::Printf(TEXT ("ProjectileMovementComponent == nullptr"));
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, msg1, true, FVector2D(1.f));
-	}
-	else
-	{
-		FString msg2 = ProjectileMovementComponent->ForwardVector.ToString();
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, msg2, true, FVector2D(1.f));			
-		ProjectileMovementComponent->TriggerImpulse();
-	}
-	
+void UT7ShootProjectile::SetAmmoComponent(UT7AmmoComponent* AmmoComp)
+{
+	AmmoComponent = AmmoComp;
 }

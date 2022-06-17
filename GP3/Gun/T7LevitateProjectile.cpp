@@ -19,6 +19,9 @@ AT7LevitateProjectile::AT7LevitateProjectile()
 void AT7LevitateProjectile::BeginOverlapHandle(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if(hasImpacted) return;
+	hasImpacted = true;
+	
 	FString msg1 = OtherActor->GetHumanReadableName();
 	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::White, msg1, true, FVector2D(1.f));
 	
@@ -27,5 +30,11 @@ void AT7LevitateProjectile::BeginOverlapHandle(UPrimitiveComponent* OverlappedCo
 	if(LevitateResponse != nullptr)
 	{
 		LevitateResponse->StartLevitate();
-	}	
+		ProjectileHit();
+	}
+	else
+	{
+		ProjectileHitNoHitResponse();
+	}
+	
 }

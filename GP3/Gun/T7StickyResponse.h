@@ -2,6 +2,9 @@
 #include "Components/ActorComponent.h"
 #include "T7StickyResponse.generated.h"
 
+class UT7AmmoComponent;
+class AGP3Character;
+
 UCLASS(ClassGroup = ProjectileResponse, Meta = (BlueprintSpawnableComponent))
 class UT7StickyResponse : public UActorComponent
 {
@@ -9,6 +12,7 @@ class UT7StickyResponse : public UActorComponent
 public:
 	UT7StickyResponse();
 
+	// Events
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnStartSticky);
 	UPROPERTY(BlueprintAssignable)
 	FOnStartSticky OnStartSticky;
@@ -17,6 +21,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnStopSticky OnStopSticky;
 
+	// Triggers
 	UFUNCTION(BlueprintCallable)
 	void StartSticky();
 	
@@ -25,5 +30,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite)
 	bool bIsSticky;
-	
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AGP3Character> player;
 };

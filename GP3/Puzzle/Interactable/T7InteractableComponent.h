@@ -25,7 +25,6 @@ public:
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeactivate);
 	UPROPERTY(BlueprintAssignable)
 	FOnActivate OnDeactivate;
-	
 
 	UPROPERTY(BlueprintReadWrite)
 	bool bIsActivated;

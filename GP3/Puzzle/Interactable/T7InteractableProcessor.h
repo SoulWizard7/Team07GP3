@@ -10,7 +10,9 @@ class GP3_API UT7InteractableProcessor : public UActorComponent
 
 public:
 	UT7InteractableProcessor();
-	
+
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void BeginPlay() override;
 public:
 	UFUNCTION()
 	void EvaluateCallResult();
@@ -21,10 +23,16 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void TriggerDeactivate();
 	
+	UFUNCTION()
+	void SetupInteractables();
+	
 public:
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 	TArray<AActor*> InputInteractables;
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 	TArray<AActor*> OutputResponses;
+
+	UPROPERTY(EditAnywhere)
+	bool bDrawGizmos;
 };

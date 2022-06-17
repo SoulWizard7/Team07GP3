@@ -20,6 +20,9 @@ AT7FreezeProjectile::AT7FreezeProjectile()
 void AT7FreezeProjectile::BeginOverlapHandle(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if(hasImpacted) return;
+	hasImpacted = true;
+	
 	FString msg1 = OtherActor->GetHumanReadableName();
 	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::White, msg1, true, FVector2D(1.f));
 	
@@ -29,9 +32,12 @@ void AT7FreezeProjectile::BeginOverlapHandle(UPrimitiveComponent* OverlappedComp
 	if(FreezeResponse != nullptr)
 	{		
 		FreezeResponse->StartFreeze();
+		ProjectileHit();
 	}
-
-	ProjectileHit();
+	else
+	{
+		ProjectileHitNoHitResponse();
+	}
 	
 }
 

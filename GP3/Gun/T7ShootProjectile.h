@@ -6,13 +6,15 @@
 class AT7FreezeProjectile;
 class AT7LevitateProjectile;
 class AT7StickyProjectile;
+class UT7AmmoComponent;
 
-UENUM()
-enum class EProjectileTypes
+UENUM(BlueprintType)
+enum class EProjectileTypes : uint8
 {
-	Frozen,
 	Levitate,
-	Sticky
+	Frozen,
+	Sticky,
+	None
 };
 
 UCLASS(Meta = (BlueprintSpawnableComponent))
@@ -24,23 +26,7 @@ public:
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable)
-	void FireProjectile(FTransform SpawnTransform, FVector ForwardVector);
-
-	UPROPERTY(EditAnywhere)
-	EProjectileTypes ProjectileType = EProjectileTypes::Frozen;
-	
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<AT7FreezeProjectile> FreezeProjectile;
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<AT7LevitateProjectile> LevitateProjectile;
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<AT7StickyProjectile> StickyProjectile;	
-
-	UPROPERTY(EditAnywhere)
-	FTransform ShootTransform;
-
-	UPROPERTY(EditAnywhere)
-	FVector ProjectileSpawnPosition;
+	void FireProjectile(FTransform SpawnTransform, FVector ForwardVector, float ImpulseFromDegrees, FVector AdjustedGravity);
 
 	UFUNCTION(BlueprintCallable)
 	void SetGunToSticky();
@@ -52,11 +38,58 @@ public:
 	void SetGunToUseLevitate();
 
 	UFUNCTION()
-	void ShootLevitateProjectile(FTransform SpawnTransform, FVector ForwardVector);
+	void ShootLevitateProjectile(
+		FTransform SpawnTransform,
+		FVector ForwardVector,
+		float ImpulseFromDegrees,
+		FVector AdjustedGravity) const;
 
 	UFUNCTION()
-	void ShootFreezeProjectile(FTransform SpawnTransform, FVector ForwardVector);
+	void ShootFreezeProjectile(
+		FTransform SpawnTransform,
+		FVector ForwardVector,
+		float ImpulseFromDegrees,
+		FVector AdjustedGravity) const;
 
 	UFUNCTION()
-	void ShootStickyProjectile(FTransform SpawnTransform, FVector ForwardVector);
+	void ShootStickyProjectile(
+		FTransform SpawnTransform,
+		FVector ForwardVector,
+		float ImpulseFromDegrees,
+		FVector AdjustedGravity) const;
+
+	UFUNCTION(BlueprintCallable)
+	void SetAmmoComponent(UT7AmmoComponent* AmmoComp);
+
+public:
+	UPROPERTY(BlueprintReadOnly)
+	class UT7AmmoComponent* AmmoComponent;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EProjectileTypes ProjectileType = EProjectileTypes::Frozen;
+	
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AT7FreezeProjectile> FreezeProjectile;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AT7LevitateProjectile> LevitateProjectile;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AT7StickyProjectile> StickyProjectile;
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShootFreeze);
+	UPROPERTY(BlueprintAssignable)
+	FOnShootFreeze OnShootFreeze;
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShootLevitate);
+	UPROPERTY(BlueprintAssignable)
+	FOnShootLevitate OnShootLevitate;
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShootSticky);
+	UPROPERTY(BlueprintAssignable)
+	FOnShootSticky OnShootSticky;
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShootNoAmmo);
+	UPROPERTY(BlueprintAssignable)
+	FOnShootNoAmmo OnShootNoAmmo;
+	
+	FActorSpawnParameters SpawnParameters;
 };
